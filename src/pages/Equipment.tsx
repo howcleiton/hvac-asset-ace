@@ -5,19 +5,56 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Plus, Search, Wind } from "lucide-react";
 import { useEquipment } from "@/contexts/EquipmentContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Equipment = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
   const { equipments, loading } = useEquipment();
 
-  const filteredEquipments = equipments.filter(
-    (eq) =>
-      eq.tag.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      eq.modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (eq.local && eq.local.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (eq.localEvaporadora && eq.localEvaporadora.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredEquipments = equipments.filter((eq) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+
+    switch (filterCategory) {
+      case "tag":
+        return eq.tag.toLowerCase().includes(term);
+      case "modelo":
+        return eq.modelo.toLowerCase().includes(term);
+      case "marca":
+        return eq.marca.toLowerCase().includes(term);
+      case "tensao":
+        return eq.tensao.toLowerCase().includes(term);
+      case "local":
+        return (
+          (eq.local && eq.local.toLowerCase().includes(term)) ||
+          (eq.localEvaporadora &&
+            eq.localEvaporadora.toLowerCase().includes(term)) ||
+          (eq.localCondensadora &&
+            eq.localCondensadora.toLowerCase().includes(term))
+        );
+      case "all":
+      default:
+        return (
+          eq.tag.toLowerCase().includes(term) ||
+          eq.modelo.toLowerCase().includes(term) ||
+          eq.marca.toLowerCase().includes(term) ||
+          eq.tensao.toLowerCase().includes(term) ||
+          (eq.local && eq.local.toLowerCase().includes(term)) ||
+          (eq.localEvaporadora &&
+            eq.localEvaporadora.toLowerCase().includes(term)) ||
+          (eq.localCondensadora &&
+            eq.localCondensadora.toLowerCase().includes(term))
+        );
+    }
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,14 +74,29 @@ const Equipment = () => {
 
         {/* Search and Add */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por Tag, Modelo ou Local..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-12 bg-card border-border"
-            />
+          <div className="flex flex-1 gap-2">
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="w-[120px] h-12 bg-card border-border">
+                <SelectValue placeholder="Filtrar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="tag">Tag</SelectItem>
+                <SelectItem value="modelo">Modelo</SelectItem>
+                <SelectItem value="marca">Marca</SelectItem>
+                <SelectItem value="tensao">Tensão</SelectItem>
+                <SelectItem value="local">Local</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 bg-card border-border"
+              />
+            </div>
           </div>
           <Button
             onClick={() => navigate("/cadastro")}
