@@ -21,10 +21,12 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowLeft, Save, Wind, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useEquipment } from "@/contexts/EquipmentContext";
 
 const EquipmentForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addEquipment, equipments } = useEquipment();
 
   const [formData, setFormData] = useState({
     tag: "",
@@ -88,7 +90,7 @@ const EquipmentForm = () => {
     e.preventDefault();
 
     // Validação básica
-    if (!formData.tag || !formData.modelo || !formData.fluido) {
+    if (!formData.tag || !formData.modelo || !formData.fluido || !formData.marca) {
       toast({
         title: "Erro de validação",
         description: "Por favor, preencha os campos obrigatórios.",
@@ -97,7 +99,20 @@ const EquipmentForm = () => {
       return;
     }
 
-    // Aqui será integrado com Supabase
+    // Verifica se a tag já existe
+    const tagExists = equipments.some(eq => eq.tag.toLowerCase() === formData.tag.toLowerCase());
+    if (tagExists) {
+      toast({
+        title: "Erro!",
+        description: "Já existe um equipamento com esta TAG.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Adiciona o equipamento
+    addEquipment(formData);
+
     toast({
       title: "Equipamento cadastrado!",
       description: `Tag ${formData.tag} salvo com sucesso.`,

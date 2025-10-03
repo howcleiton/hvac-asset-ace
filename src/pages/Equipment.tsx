@@ -4,51 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Plus, Search, Wind } from "lucide-react";
-
-interface Equipment {
-  id: string;
-  tag: string;
-  modelo: string;
-  fluido: string;
-  capacidade: string;
-  local: string;
-  corrente: string;
-  tensao: string;
-  reversao: string;
-  trifasico: string;
-}
+import { useEquipment } from "@/contexts/EquipmentContext";
 
 const Equipment = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Mock data - será substituído pelo Supabase
-  const equipments: Equipment[] = [
-    {
-      id: "1",
-      tag: "FC-001",
-      modelo: "Fancoil",
-      fluido: "R410A",
-      capacidade: "24.000",
-      local: "Sala 101",
-      corrente: "12.5",
-      tensao: "220",
-      reversao: "Sim",
-      trifasico: "Não",
-    },
-    {
-      id: "2",
-      tag: "HW-002",
-      modelo: "Hiwall",
-      fluido: "R32",
-      capacidade: "18.000",
-      local: "Escritório Central",
-      corrente: "8.3",
-      tensao: "220",
-      reversao: "Sim",
-      trifasico: "Não",
-    },
-  ];
+  const { equipments } = useEquipment();
 
   const filteredEquipments = equipments.filter(
     (eq) =>
@@ -99,8 +60,7 @@ const Equipment = () => {
           {filteredEquipments.map((equipment) => (
             <Card
               key={equipment.id}
-              className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer border-border bg-card"
-              onClick={() => navigate(`/equipamento/${equipment.id}`)}
+              className="p-6 hover:shadow-lg transition-all duration-300 border-border bg-card"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
