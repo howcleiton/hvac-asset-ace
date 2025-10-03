@@ -11,7 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Wind } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ArrowLeft, Save, Wind, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const EquipmentForm = () => {
@@ -21,6 +29,7 @@ const EquipmentForm = () => {
   const [formData, setFormData] = useState({
     tag: "",
     modelo: "",
+    marca: "",
     fluido: "",
     capacidade: "",
     local: "",
@@ -29,6 +38,51 @@ const EquipmentForm = () => {
     reversao: "",
     trifasico: "",
   });
+
+  const [marcas, setMarcas] = useState<string[]>(["Carrier", "Daikin", "Midea", "Springer"]);
+  const [locais, setLocais] = useState<string[]>(["Sala 101", "Sala 102", "Recepção", "Almoxarifado"]);
+  const [newMarca, setNewMarca] = useState("");
+  const [newLocal, setNewLocal] = useState("");
+  const [marcaDialogOpen, setMarcaDialogOpen] = useState(false);
+  const [localDialogOpen, setLocalDialogOpen] = useState(false);
+
+  const handleAddMarca = () => {
+    if (newMarca.trim() && !marcas.includes(newMarca.trim())) {
+      setMarcas([...marcas, newMarca.trim()]);
+      setNewMarca("");
+      toast({
+        title: "Marca adicionada!",
+        description: `${newMarca} foi adicionada com sucesso.`,
+      });
+    }
+  };
+
+  const handleRemoveMarca = (marca: string) => {
+    setMarcas(marcas.filter(m => m !== marca));
+    toast({
+      title: "Marca removida!",
+      description: `${marca} foi removida com sucesso.`,
+    });
+  };
+
+  const handleAddLocal = () => {
+    if (newLocal.trim() && !locais.includes(newLocal.trim())) {
+      setLocais([...locais, newLocal.trim()]);
+      setNewLocal("");
+      toast({
+        title: "Local adicionado!",
+        description: `${newLocal} foi adicionado com sucesso.`,
+      });
+    }
+  };
+
+  const handleRemoveLocal = (local: string) => {
+    setLocais(locais.filter(l => l !== local));
+    toast({
+      title: "Local removido!",
+      description: `${local} foi removido com sucesso.`,
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +131,99 @@ const EquipmentForm = () => {
           </div>
         </div>
 
+        {/* Management Buttons */}
+        <div className="flex gap-3 mb-6">
+          <Dialog open={marcaDialogOpen} onOpenChange={setMarcaDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex-1">
+                <Plus className="h-4 w-4 mr-2" />
+                Gerenciar Marcas
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Gerenciar Marcas</DialogTitle>
+                <DialogDescription>
+                  Adicione ou remova marcas de equipamentos
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Nome da marca"
+                    value={newMarca}
+                    onChange={(e) => setNewMarca(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddMarca())}
+                  />
+                  <Button onClick={handleAddMarca} type="button">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {marcas.map((marca) => (
+                    <div key={marca} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                      <span>{marca}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveMarca(marca)}
+                        type="button"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={localDialogOpen} onOpenChange={setLocalDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex-1">
+                <Plus className="h-4 w-4 mr-2" />
+                Gerenciar Locais
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Gerenciar Locais</DialogTitle>
+                <DialogDescription>
+                  Adicione ou remova locais de instalação
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Nome do local"
+                    value={newLocal}
+                    onChange={(e) => setNewLocal(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddLocal())}
+                  />
+                  <Button onClick={handleAddLocal} type="button">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {locais.map((local) => (
+                    <div key={local} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                      <span>{local}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveLocal(local)}
+                        type="button"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
         {/* Form */}
         <Card className="p-8 bg-card border-border">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -120,6 +267,29 @@ const EquipmentForm = () => {
                     <SelectItem value="Piso Teto">Piso Teto</SelectItem>
                     <SelectItem value="Exaustor">Exaustor</SelectItem>
                     <SelectItem value="Ventilador">Ventilador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Marca */}
+              <div className="space-y-2">
+                <Label htmlFor="marca" className="text-foreground font-medium">
+                  Marca *
+                </Label>
+                <Select
+                  value={formData.marca}
+                  onValueChange={(value) => setFormData({ ...formData, marca: value })}
+                  required
+                >
+                  <SelectTrigger className="h-11 bg-background border-border">
+                    <SelectValue placeholder="Selecione a marca" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {marcas.map((marca) => (
+                      <SelectItem key={marca} value={marca}>
+                        {marca}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -180,13 +350,21 @@ const EquipmentForm = () => {
                 <Label htmlFor="local" className="text-foreground font-medium">
                   Local de Instalação
                 </Label>
-                <Input
-                  id="local"
-                  placeholder="Ex: Sala 101"
+                <Select
                   value={formData.local}
-                  onChange={(e) => setFormData({ ...formData, local: e.target.value })}
-                  className="h-11 bg-background border-border"
-                />
+                  onValueChange={(value) => setFormData({ ...formData, local: value })}
+                >
+                  <SelectTrigger className="h-11 bg-background border-border">
+                    <SelectValue placeholder="Selecione o local" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locais.map((local) => (
+                      <SelectItem key={local} value={local}>
+                        {local}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Corrente */}
