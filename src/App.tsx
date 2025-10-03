@@ -8,6 +8,7 @@ import EquipmentForm from "./pages/EquipmentForm";
 import NotFound from "./pages/NotFound";
 import { EquipmentProvider } from "./contexts/EquipmentContext";
 import EquipmentDetails from "./pages/EquipmentDetails";
+import { OptionsProvider } from "./contexts/OptionsContext";
 
 const queryClient = new QueryClient();
 
@@ -15,18 +16,20 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <EquipmentProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Equipment />} />
-            <Route path="/cadastro" element={<EquipmentForm />} />
-            <Route path="/equipamento/:id" element={<EquipmentDetails />} />
-            <Route path="/editar-equipamento/:id" element={<EquipmentForm />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <OptionsProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Equipment />} />
+              <Route path="/cadastro" element={<EquipmentForm />} />
+              <Route path="/equipamento/:id" element={<EquipmentDetails />} />
+              <Route path="/editar-equipamento/:id" element={<EquipmentForm />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </OptionsProvider>
       </EquipmentProvider>
     </TooltipProvider>
   </QueryClientProvider>

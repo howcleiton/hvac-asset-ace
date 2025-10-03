@@ -121,11 +121,10 @@ const Equipment = () => {
                       <span className="text-muted-foreground">Fluido:</span>
                       <span className="font-medium text-foreground">{equipment.fluido}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tensão:</span>
-                      <span className="font-medium text-foreground">{equipment.tensao}V</span>
-                    </div>
-                  </div>
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Tensão:</span>
+                                        <span className="font-medium text-foreground">{equipment.tensao}</span>
+                                      </div>                  </div>
 
                   <div className="mt-4 pt-4 border-t border-border flex gap-2">
                     {equipment.reversao === "Sim" && (

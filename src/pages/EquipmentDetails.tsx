@@ -92,11 +92,11 @@ const EquipmentDetails = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Corrente:</span>
-                <span className="font-medium text-foreground">{equipment.corrente}A</span>
+                <span className="font-medium text-foreground">{equipment.corrente}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tensão:</span>
-                <span className="font-medium text-foreground">{equipment.tensao}V</span>
+                <span className="font-medium text-foreground">{equipment.tensao}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Reversão:</span>

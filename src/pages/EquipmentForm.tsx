@@ -20,19 +20,21 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ArrowLeft, Save, Wind, Plus, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useEquipment, Equipment } from "@/contexts/EquipmentContext";
+import { useOptions } from "@/contexts/OptionsContext";
 
 const EquipmentForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const { addEquipment, equipments, updateEquipment } = useEquipment();
+  const { marcas, locais, addMarca, removeMarca, addLocal, removeLocal } = useOptions();
 
   const numericId = id ? parseInt(id, 10) : undefined;
   const isEditMode = !!numericId;
 
-  const [formData, setFormData] = useState<Omit<Equipment, 'id'>>({
+  const [formData, setFormData] = useState<Omit<Equipment, "id">>({
     tag: "",
     modelo: "",
     marca: "",
@@ -48,7 +50,7 @@ const EquipmentForm = () => {
   });
 
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode && equipments.length > 0) {
       const equipmentToEdit = equipments.find((eq) => eq.id === numericId);
       if (equipmentToEdit) {
         const { id, ...dataToEdit } = equipmentToEdit;
@@ -58,24 +60,24 @@ const EquipmentForm = () => {
   }, [numericId, isEditMode, equipments]);
 
   useEffect(() => {
-    setFormData(currentData => ({
-      ...currentData,
-      local: "",
-      localEvaporadora: "",
-      localCondensadora: "",
-    }));
-  }, [formData.modelo]);
+    if (!isEditMode) {
+        setFormData(currentData => ({
+        ...currentData,
+        local: "",
+        localEvaporadora: "",
+        localCondensadora: "",
+      }));
+    }
+  }, [formData.modelo, isEditMode]);
 
-  const [marcas, setMarcas] = useState<string[]>(["Carrier", "Daikin", "Midea", "Springer"]);
-  const [locais, setLocais] = useState<string[]>(["Sala 101", "Sala 102", "Recepção", "Almoxarifado", "Área Técnica Externa"]);
   const [newMarca, setNewMarca] = useState("");
   const [newLocal, setNewLocal] = useState("");
   const [marcaDialogOpen, setMarcaDialogOpen] = useState(false);
   const [localDialogOpen, setLocalDialogOpen] = useState(false);
 
-  const handleAddMarca = () => {
-    if (newMarca.trim() && !marcas.includes(newMarca.trim())) {
-      setMarcas([...marcas, newMarca.trim()]);
+  const handleAddMarca = async () => {
+    if (newMarca.trim() && !marcas.find(m => m.nome.toLowerCase() === newMarca.trim().toLowerCase())) {
+      await addMarca(newMarca.trim());
       setNewMarca("");
       toast({
         title: "Marca adicionada!",
@@ -84,17 +86,16 @@ const EquipmentForm = () => {
     }
   };
 
-  const handleRemoveMarca = (marca: string) => {
-    setMarcas(marcas.filter(m => m !== marca));
+  const handleRemoveMarca = async (id: number) => {
+    await removeMarca(id);
     toast({
       title: "Marca removida!",
-      description: `${marca} foi removida com sucesso.`,
     });
   };
 
-  const handleAddLocal = () => {
-    if (newLocal.trim() && !locais.includes(newLocal.trim())) {
-      setLocais([...locais, newLocal.trim()]);
+  const handleAddLocal = async () => {
+    if (newLocal.trim() && !locais.find(l => l.nome.toLowerCase() === newLocal.trim().toLowerCase())) {
+      await addLocal(newLocal.trim());
       setNewLocal("");
       toast({
         title: "Local adicionado!",
@@ -103,11 +104,10 @@ const EquipmentForm = () => {
     }
   };
 
-  const handleRemoveLocal = (local: string) => {
-    setLocais(locais.filter(l => l !== local));
+  const handleRemoveLocal = async (id: number) => {
+    await removeLocal(id);
     toast({
       title: "Local removido!",
-      description: `${local} foi removido com sucesso.`,
     });
   };
 
@@ -214,12 +214,12 @@ const EquipmentForm = () => {
                 </div>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {marcas.map((marca) => (
-                    <div key={marca} className="flex items-center justify-between p-2 bg-muted rounded-md">
-                      <span>{marca}</span>
+                    <div key={marca.id} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                      <span>{marca.nome}</span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleRemoveMarca(marca)}
+                        onClick={() => handleRemoveMarca(marca.id)}
                         type="button"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -259,12 +259,12 @@ const EquipmentForm = () => {
                 </div>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {locais.map((local) => (
-                    <div key={local} className="flex items-center justify-between p-2 bg-muted rounded-md">
-                      <span>{local}</span>
+                    <div key={local.id} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                      <span>{local.nome}</span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleRemoveLocal(local)}
+                        onClick={() => handleRemoveLocal(local.id)}
                         type="button"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -339,8 +339,8 @@ const EquipmentForm = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {marcas.map((marca) => (
-                      <SelectItem key={marca} value={marca}>
-                        {marca}
+                      <SelectItem key={marca.id} value={marca.nome}>
+                        {marca.nome}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -415,8 +415,8 @@ const EquipmentForm = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {locais.map((local) => (
-                          <SelectItem key={local} value={local}>
-                            {local}
+                          <SelectItem key={local.id} value={local.nome}>
+                            {local.nome}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -437,8 +437,8 @@ const EquipmentForm = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {locais.map((local) => (
-                          <SelectItem key={local} value={local}>
-                            {local}
+                          <SelectItem key={local.id} value={local.nome}>
+                            {local.nome}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -459,8 +459,8 @@ const EquipmentForm = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {locais.map((local) => (
-                        <SelectItem key={local} value={local}>
-                          {local}
+                        <SelectItem key={local.id} value={local.nome}>
+                          {local.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -488,14 +488,20 @@ const EquipmentForm = () => {
                 <Label htmlFor="tensao" className="text-foreground font-medium">
                   Tensão (V)
                 </Label>
-                <Input
-                  id="tensao"
-                  type="text"
-                  placeholder="Ex: 220"
+                <Select
                   value={formData.tensao}
-                  onChange={(e) => setFormData({ ...formData, tensao: e.target.value })}
-                  className="h-11 bg-background border-border"
-                />
+                  onValueChange={(value) => setFormData({ ...formData, tensao: value })}
+                >
+                  <SelectTrigger className="h-11 bg-background border-border">
+                    <SelectValue placeholder="Selecione a tensão" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="110V">110V</SelectItem>
+                    <SelectItem value="220V">220V</SelectItem>
+                    <SelectItem value="380V">380V</SelectItem>
+                    <SelectItem value="440V">440V</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Reversão */}
