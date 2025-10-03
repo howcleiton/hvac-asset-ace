@@ -7,6 +7,7 @@ import Equipment from "./pages/Equipment";
 import EquipmentForm from "./pages/EquipmentForm";
 import NotFound from "./pages/NotFound";
 import { EquipmentProvider } from "./contexts/EquipmentContext";
+import EquipmentDetails from "./pages/EquipmentDetails";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Equipment />} />
             <Route path="/cadastro" element={<EquipmentForm />} />
+            <Route path="/equipamento/:id" element={<EquipmentDetails />} />
+            <Route path="/editar-equipamento/:id" element={<EquipmentForm />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

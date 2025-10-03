@@ -1,13 +1,16 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export interface Equipment {
-  id: string;
+  id: number;
   tag: string;
   modelo: string;
   marca: string;
   fluido: string;
   capacidade: string;
-  local: string;
+  local?: string;
+  localEvaporadora?: string;
+  localCondensadora?: string;
   corrente: string;
   tensao: string;
   reversao: string;
@@ -16,7 +19,10 @@ export interface Equipment {
 
 interface EquipmentContextType {
   equipments: Equipment[];
-  addEquipment: (equipment: Omit<Equipment, "id">) => void;
+  loading: boolean;
+  addEquipment: (equipment: Omit<Equipment, "id">) => Promise<void>;
+  updateEquipment: (id: number, equipment: Omit<Equipment, "id">) => Promise<void>;
+  deleteEquipment: (id: number) => Promise<void>;
 }
 
 const EquipmentContext = createContext<EquipmentContextType | undefined>(undefined);
@@ -30,45 +36,54 @@ export const useEquipment = () => {
 };
 
 export const EquipmentProvider = ({ children }: { children: ReactNode }) => {
-  const [equipments, setEquipments] = useState<Equipment[]>([
-    {
-      id: "1",
-      tag: "FC-001",
-      modelo: "Fancoil",
-      marca: "Carrier",
-      fluido: "R410A",
-      capacidade: "24.000",
-      local: "Sala 101",
-      corrente: "12.5",
-      tensao: "220",
-      reversao: "Sim",
-      trifasico: "Não",
-    },
-    {
-      id: "2",
-      tag: "HW-002",
-      modelo: "Hiwall",
-      marca: "Daikin",
-      fluido: "R32",
-      capacidade: "18.000",
-      local: "Escritório Central",
-      corrente: "8.3",
-      tensao: "220",
-      reversao: "Sim",
-      trifasico: "Não",
-    },
-  ]);
+  const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const addEquipment = (equipment: Omit<Equipment, "id">) => {
-    const newEquipment = {
-      ...equipment,
-      id: Date.now().toString(),
-    };
-    setEquipments((prev) => [...prev, newEquipment]);
+  const fetchEquipments = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("equipamentos").select("*").order('id', { ascending: true });
+
+    if (error) {
+      console.error("Error fetching equipments:", error);
+    } else {
+      setEquipments(data || []);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchEquipments();
+  }, [fetchEquipments]);
+
+  const addEquipment = async (equipment: Omit<Equipment, "id">) => {
+    const { error } = await supabase.from("equipamentos").insert([equipment]);
+    if (error) {
+      console.error("Error adding equipment:", error);
+    } else {
+      await fetchEquipments();
+    }
+  };
+
+  const updateEquipment = async (id: number, updatedEquipment: Omit<Equipment, "id">) => {
+    const { error } = await supabase.from("equipamentos").update(updatedEquipment).eq("id", id);
+    if (error) {
+      console.error("Error updating equipment:", error);
+    } else {
+      await fetchEquipments();
+    }
+  };
+
+  const deleteEquipment = async (id: number) => {
+    const { error } = await supabase.from("equipamentos").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting equipment:", error);
+    } else {
+      setEquipments((prev) => prev.filter((eq) => eq.id !== id));
+    }
   };
 
   return (
-    <EquipmentContext.Provider value={{ equipments, addEquipment }}>
+    <EquipmentContext.Provider value={{ equipments, loading, addEquipment, updateEquipment, deleteEquipment }}>
       {children}
     </EquipmentContext.Provider>
   );

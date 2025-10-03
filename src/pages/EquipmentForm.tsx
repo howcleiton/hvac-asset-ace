@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,28 +21,53 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowLeft, Save, Wind, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEquipment } from "@/contexts/EquipmentContext";
+import { useEquipment, Equipment } from "@/contexts/EquipmentContext";
 
 const EquipmentForm = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
-  const { addEquipment, equipments } = useEquipment();
+  const { addEquipment, equipments, updateEquipment } = useEquipment();
 
-  const [formData, setFormData] = useState({
+  const numericId = id ? parseInt(id, 10) : undefined;
+  const isEditMode = !!numericId;
+
+  const [formData, setFormData] = useState<Omit<Equipment, 'id'>>({
     tag: "",
     modelo: "",
     marca: "",
     fluido: "",
     capacidade: "",
     local: "",
+    localEvaporadora: "",
+    localCondensadora: "",
     corrente: "",
     tensao: "",
     reversao: "",
     trifasico: "",
   });
 
+  useEffect(() => {
+    if (isEditMode) {
+      const equipmentToEdit = equipments.find((eq) => eq.id === numericId);
+      if (equipmentToEdit) {
+        const { id, ...dataToEdit } = equipmentToEdit;
+        setFormData(dataToEdit);
+      }
+    }
+  }, [numericId, isEditMode, equipments]);
+
+  useEffect(() => {
+    setFormData(currentData => ({
+      ...currentData,
+      local: "",
+      localEvaporadora: "",
+      localCondensadora: "",
+    }));
+  }, [formData.modelo]);
+
   const [marcas, setMarcas] = useState<string[]>(["Carrier", "Daikin", "Midea", "Springer"]);
-  const [locais, setLocais] = useState<string[]>(["Sala 101", "Sala 102", "Recepção", "Almoxarifado"]);
+  const [locais, setLocais] = useState<string[]>(["Sala 101", "Sala 102", "Recepção", "Almoxarifado", "Área Técnica Externa"]);
   const [newMarca, setNewMarca] = useState("");
   const [newLocal, setNewLocal] = useState("");
   const [marcaDialogOpen, setMarcaDialogOpen] = useState(false);
@@ -86,10 +111,9 @@ const EquipmentForm = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validação básica
     if (!formData.tag || !formData.modelo || !formData.fluido || !formData.marca) {
       toast({
         title: "Erro de validação",
@@ -99,8 +123,10 @@ const EquipmentForm = () => {
       return;
     }
 
-    // Verifica se a tag já existe
-    const tagExists = equipments.some(eq => eq.tag.toLowerCase() === formData.tag.toLowerCase());
+    const tagExists = equipments.some(
+      (eq) => eq.tag.toLowerCase() === formData.tag.toLowerCase() && eq.id !== numericId
+    );
+
     if (tagExists) {
       toast({
         title: "Erro!",
@@ -110,15 +136,21 @@ const EquipmentForm = () => {
       return;
     }
 
-    // Adiciona o equipamento
-    addEquipment(formData);
-
-    toast({
-      title: "Equipamento cadastrado!",
-      description: `Tag ${formData.tag} salvo com sucesso.`,
-    });
-
-    setTimeout(() => navigate("/"), 1500);
+    if (isEditMode && numericId) {
+      await updateEquipment(numericId, formData);
+      toast({
+        title: "Equipamento atualizado!",
+        description: `Tag ${formData.tag} atualizada com sucesso.`,
+      });
+      setTimeout(() => navigate(`/equipamento/${numericId}`), 1000);
+    } else {
+      await addEquipment(formData);
+      toast({
+        title: "Equipamento cadastrado!",
+        description: `Tag ${formData.tag} salvo com sucesso.`,
+      });
+      setTimeout(() => navigate("/"), 1000);
+    }
   };
 
   return (
@@ -128,7 +160,7 @@ const EquipmentForm = () => {
         <div className="mb-8">
           <Button
             variant="ghost"
-            onClick={() => navigate("/")}
+            onClick={() => navigate(isEditMode ? `/equipamento/${numericId}` : "/")}
             className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -140,8 +172,14 @@ const EquipmentForm = () => {
               <Wind className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-foreground">Novo Equipamento</h1>
-              <p className="text-muted-foreground">Cadastre um novo equipamento HVAC</p>
+              <h1 className="text-4xl font-bold text-foreground">
+                {isEditMode ? "Editar Equipamento" : "Novo Equipamento"}
+              </h1>
+              <p className="text-muted-foreground">
+                {isEditMode
+                  ? "Atualize os detalhes do equipamento HVAC"
+                  : "Cadastre um novo equipamento HVAC"}
+              </p>
             </div>
           </div>
         </div>
@@ -360,27 +398,75 @@ const EquipmentForm = () => {
                 </Select>
               </div>
 
-              {/* Local */}
-              <div className="space-y-2">
-                <Label htmlFor="local" className="text-foreground font-medium">
-                  Local de Instalação
-                </Label>
-                <Select
-                  value={formData.local}
-                  onValueChange={(value) => setFormData({ ...formData, local: value })}
-                >
-                  <SelectTrigger className="h-11 bg-background border-border">
-                    <SelectValue placeholder="Selecione o local" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locais.map((local) => (
-                      <SelectItem key={local} value={local}>
-                        {local}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {formData.modelo === "Hiwall" || formData.modelo === "Piso Teto" || formData.modelo === "Cassete" ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="localEvaporadora" className="text-foreground font-medium">
+                      Local da Evaporadora
+                    </Label>
+                    <Select
+                      value={formData.localEvaporadora}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, localEvaporadora: value })
+                      }
+                    >
+                      <SelectTrigger className="h-11 bg-background border-border">
+                        <SelectValue placeholder="Selecione o local" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locais.map((local) => (
+                          <SelectItem key={local} value={local}>
+                            {local}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="localCondensadora" className="text-foreground font-medium">
+                      Local da Condensadora
+                    </Label>
+                    <Select
+                      value={formData.localCondensadora}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, localCondensadora: value })
+                      }
+                    >
+                      <SelectTrigger className="h-11 bg-background border-border">
+                        <SelectValue placeholder="Selecione o local" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locais.map((local) => (
+                          <SelectItem key={local} value={local}>
+                            {local}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="local" className="text-foreground font-medium">
+                    Local de Instalação
+                  </Label>
+                  <Select
+                    value={formData.local}
+                    onValueChange={(value) => setFormData({ ...formData, local: value })}
+                  >
+                    <SelectTrigger className="h-11 bg-background border-border">
+                      <SelectValue placeholder="Selecione o local" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locais.map((local) => (
+                        <SelectItem key={local} value={local}>
+                          {local}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Corrente */}
               <div className="space-y-2">
@@ -457,7 +543,7 @@ const EquipmentForm = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/")}
+                onClick={() => navigate(isEditMode ? `/equipamento/${numericId}` : "/")}
                 className="flex-1"
               >
                 Cancelar
@@ -467,7 +553,7 @@ const EquipmentForm = () => {
                 className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Salvar Equipamento
+                {isEditMode ? "Salvar Alterações" : "Salvar Equipamento"}
               </Button>
             </div>
           </form>
