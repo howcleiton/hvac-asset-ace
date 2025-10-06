@@ -56,20 +56,24 @@ export const EquipmentProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchEquipments]);
 
   const addEquipment = async (equipment: Omit<Equipment, "id">) => {
-    const { error } = await supabase.from("equipamentos").insert([equipment]);
+    const { data, error } = await supabase.from("equipamentos").insert([equipment]).select();
     if (error) {
       console.error("Error adding equipment:", error);
-    } else {
+    } else if (data) {
       await fetchEquipments();
+    } else {
+      console.error("Error adding equipment: No data returned after insert.");
     }
   };
 
   const updateEquipment = async (id: number, updatedEquipment: Omit<Equipment, "id">) => {
-    const { error } = await supabase.from("equipamentos").update(updatedEquipment).eq("id", id);
+    const { data, error } = await supabase.from("equipamentos").update(updatedEquipment).eq("id", id).select();
     if (error) {
       console.error("Error updating equipment:", error);
-    } else {
+    } else if (data) {
       await fetchEquipments();
+    } else {
+      console.error("Error updating equipment: No data returned after update.");
     }
   };
 
