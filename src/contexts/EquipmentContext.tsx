@@ -15,6 +15,9 @@ export interface Equipment {
   tensao: string;
   reversao: string;
   trifasico: string;
+  modelo_correia?: string;
+  quantidade_correias?: string;
+  filtros?: { modelo_filtro: string; tamanho_filtro: string; quantidade_filtro: string; }[];
 }
 
 interface EquipmentContextType {

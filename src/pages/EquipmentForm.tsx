@@ -47,6 +47,9 @@ const EquipmentForm = () => {
     tensao: "",
     reversao: "",
     trifasico: "",
+    modelo_correia: "",
+    quantidade_correias: "",
+    filtros: [],
   });
 
   useEffect(() => {
@@ -111,10 +114,34 @@ const EquipmentForm = () => {
     });
   };
 
+  const showBeltFields = formData.modelo === "Fancoil" || formData.modelo === "Exaustor" || formData.modelo === "Ventilador";
+  const showHvacFields = formData.modelo === "Hiwall" || formData.modelo === "Cassete" || formData.modelo === "Piso Teto";
+  const showFilterFields = formData.modelo === "Fancoil" || formData.modelo === "Ventilador";
+
+  const handleFilterChange = (index: number, field: string, value: string) => {
+    const newFilters = [...(formData.filtros || [])];
+    newFilters[index] = { ...newFilters[index], [field]: value };
+    setFormData({ ...formData, filtros: newFilters });
+  };
+
+  const addFilter = () => {
+    const newFilters = [...(formData.filtros || []), { modelo_filtro: "", tamanho_filtro: "", quantidade_filtro: "" }];
+    setFormData({ ...formData, filtros: newFilters });
+  };
+
+  const removeFilter = (index: number) => {
+    const newFilters = [...(formData.filtros || [])];
+    newFilters.splice(index, 1);
+    setFormData({ ...formData, filtros: newFilters });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.tag || !formData.modelo || !formData.fluido || !formData.marca) {
+    const baseValidation = formData.tag && formData.modelo && formData.marca;
+    const hvacValidation = showHvacFields && formData.fluido;
+
+    if (!baseValidation || (showHvacFields && !hvacValidation)) {
       toast({
         title: "Erro de validação",
         description: "Por favor, preencha os campos obrigatórios.",
@@ -205,7 +232,8 @@ const EquipmentForm = () => {
                   <Input
                     placeholder="Nome da marca"
                     value={newMarca}
-                    onChange={(e) => setNewMarca(e.target.value)}
+                    onChange={(e) => setNewMarca(e.target.value.toUpperCase())}
+                    style={{ textTransform: "uppercase" }}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddMarca())}
                   />
                   <Button onClick={handleAddMarca} type="button">
@@ -250,7 +278,8 @@ const EquipmentForm = () => {
                   <Input
                     placeholder="Nome do local"
                     value={newLocal}
-                    onChange={(e) => setNewLocal(e.target.value)}
+                    onChange={(e) => setNewLocal(e.target.value.toUpperCase())}
+                    style={{ textTransform: "uppercase" }}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddLocal())}
                   />
                   <Button onClick={handleAddLocal} type="button">
@@ -289,7 +318,8 @@ const EquipmentForm = () => {
                 id="tag"
                 placeholder="Ex: FC-001"
                 value={formData.tag}
-                onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, tag: e.target.value.toUpperCase() })}
+                style={{ textTransform: "uppercase" }}
                 className="h-11 bg-background border-border"
                 required
               />
@@ -347,58 +377,101 @@ const EquipmentForm = () => {
                 </Select>
               </div>
 
-              {/* Fluido */}
-              <div className="space-y-2">
-                <Label htmlFor="fluido" className="text-foreground font-medium">
-                  Fluido Refrigerante *
-                </Label>
-                <Select
-                  value={formData.fluido}
-                  onValueChange={(value) => setFormData({ ...formData, fluido: value })}
-                  required
-                >
-                  <SelectTrigger className="h-11 bg-background border-border">
-                    <SelectValue placeholder="Selecione o fluido" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="R22">R22</SelectItem>
-                    <SelectItem value="R32">R32</SelectItem>
-                    <SelectItem value="R410A">R410A</SelectItem>
-                    <SelectItem value="R404A">R404A</SelectItem>
-                    <SelectItem value="N/A">N/A</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {showHvacFields && (
+                <>
+                  {/* Fluido */}
+                  <div className="space-y-2">
+                    <Label htmlFor="fluido" className="text-foreground font-medium">
+                      Fluido Refrigerante *
+                    </Label>
+                    <Select
+                      value={formData.fluido}
+                      onValueChange={(value) => setFormData({ ...formData, fluido: value })}
+                      required={showHvacFields}
+                    >
+                      <SelectTrigger className="h-11 bg-background border-border">
+                        <SelectValue placeholder="Selecione o fluido" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="R22">R22</SelectItem>
+                        <SelectItem value="R32">R32</SelectItem>
+                        <SelectItem value="R410A">R410A</SelectItem>
+                        <SelectItem value="R404A">R404A</SelectItem>
+                        <SelectItem value="N/A">N/A</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* Capacidade */}
-              <div className="space-y-2">
-                <Label htmlFor="capacidade" className="text-foreground font-medium">
-                  Capacidade BTU/h
-                </Label>
-                <Select
-                  value={formData.capacidade}
-                  onValueChange={(value) => setFormData({ ...formData, capacidade: value })}
-                >
-                  <SelectTrigger className="h-11 bg-background border-border">
-                    <SelectValue placeholder="Selecione a capacidade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="9.000">9.000</SelectItem>
-                    <SelectItem value="12.000">12.000</SelectItem>
-                    <SelectItem value="18.000">18.000</SelectItem>
-                    <SelectItem value="24.000">24.000</SelectItem>
-                    <SelectItem value="30.000">30.000</SelectItem>
-                    <SelectItem value="36.000">36.000</SelectItem>
-                    <SelectItem value="42.000">42.000</SelectItem>
-                    <SelectItem value="48.000">48.000</SelectItem>
-                    <SelectItem value="58.000">58.000</SelectItem>
-                    <SelectItem value="60.000">60.000</SelectItem>
-                    <SelectItem value="N/A">N/A</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  {/* Capacidade */}
+                  <div className="space-y-2">
+                    <Label htmlFor="capacidade" className="text-foreground font-medium">
+                      Capacidade BTU/h
+                    </Label>
+                    <Select
+                      value={formData.capacidade}
+                      onValueChange={(value) => setFormData({ ...formData, capacidade: value })}
+                    >
+                      <SelectTrigger className="h-11 bg-background border-border">
+                        <SelectValue placeholder="Selecione a capacidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="9.000">9.000</SelectItem>
+                        <SelectItem value="12.000">12.000</SelectItem>
+                        <SelectItem value="18.000">18.000</SelectItem>
+                        <SelectItem value="24.000">24.000</SelectItem>
+                        <SelectItem value="30.000">30.000</SelectItem>
+                        <SelectItem value="36.000">36.000</SelectItem>
+                        <SelectItem value="42.000">42.000</SelectItem>
+                        <SelectItem value="48.000">48.000</SelectItem>
+                        <SelectItem value="58.000">58.000</SelectItem>
+                        <SelectItem value="60.000">60.000</SelectItem>
+                        <SelectItem value="N/A">N/A</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
 
-              {formData.modelo === "Hiwall" || formData.modelo === "Piso Teto" || formData.modelo === "Cassete" ? (
+              {showBeltFields && (
+                <>
+                  {/* Modelo da Correia */}
+                  <div className="space-y-2">
+                    <Label htmlFor="modelo_correia" className="text-foreground font-medium">
+                      Modelo da Correia
+                    </Label>
+                    <Input
+                      id="modelo_correia"
+                      placeholder="Ex: A-30"
+                      value={formData.modelo_correia}
+                      onChange={(e) => setFormData({ ...formData, modelo_correia: e.target.value.toUpperCase() })}
+                      style={{ textTransform: "uppercase" }}
+                      className="h-11 bg-background border-border"
+                    />
+                  </div>
+
+                  {/* Quantidade de Correias */}
+                  <div className="space-y-2">
+                    <Label htmlFor="quantidade_correias" className="text-foreground font-medium">
+                      Quantidade de Correias
+                    </Label>
+                    <Select
+                      value={formData.quantidade_correias}
+                      onValueChange={(value) => setFormData({ ...formData, quantidade_correias: value })}
+                    >
+                      <SelectTrigger className="h-11 bg-background border-border">
+                        <SelectValue placeholder="Selecione a quantidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1</SelectItem>
+                        <SelectItem value="2">2</SelectItem>
+                        <SelectItem value="3">3</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              {showHvacFields ? (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="localEvaporadora" className="text-foreground font-medium">
@@ -471,14 +544,15 @@ const EquipmentForm = () => {
               {/* Corrente */}
               <div className="space-y-2">
                 <Label htmlFor="corrente" className="text-foreground font-medium">
-                  Corrente (A)
+                  Corrente Nominal (A)
                 </Label>
                 <Input
                   id="corrente"
                   type="text"
                   placeholder="Ex: 12.5"
                   value={formData.corrente}
-                  onChange={(e) => setFormData({ ...formData, corrente: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, corrente: e.target.value.toUpperCase() })}
+                  style={{ textTransform: "uppercase" }}
                   className="h-11 bg-background border-border"
                 />
               </div>
@@ -486,7 +560,7 @@ const EquipmentForm = () => {
               {/* Tensão */}
               <div className="space-y-2">
                 <Label htmlFor="tensao" className="text-foreground font-medium">
-                  Tensão (V)
+                  Tensão Nominal (V)
                 </Label>
                 <Select
                   value={formData.tensao}
@@ -496,7 +570,7 @@ const EquipmentForm = () => {
                     <SelectValue placeholder="Selecione a tensão" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="110V">110V</SelectItem>
+                    <SelectItem value="127V">127V</SelectItem>
                     <SelectItem value="220V">220V</SelectItem>
                     <SelectItem value="380V">380V</SelectItem>
                     <SelectItem value="440V">440V</SelectItem>
@@ -504,25 +578,26 @@ const EquipmentForm = () => {
                 </Select>
               </div>
 
-              {/* Reversão */}
-              <div className="space-y-2">
-                <Label htmlFor="reversao" className="text-foreground font-medium">
-                  Reversão de Ciclo
-                </Label>
-                <Select
-                  value={formData.reversao}
-                  onValueChange={(value) => setFormData({ ...formData, reversao: value })}
-                >
-                  <SelectTrigger className="h-11 bg-background border-border">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Sim">Sim</SelectItem>
-                    <SelectItem value="Não">Não</SelectItem>
-                    <SelectItem value="N/A">N/A</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {showHvacFields && (
+                <div className="space-y-2">
+                  <Label htmlFor="reversao" className="text-foreground font-medium">
+                    Reversão de Ciclo
+                  </Label>
+                  <Select
+                    value={formData.reversao}
+                    onValueChange={(value) => setFormData({ ...formData, reversao: value })}
+                  >
+                    <SelectTrigger className="h-11 bg-background border-border">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Sim">Sim</SelectItem>
+                      <SelectItem value="Não">Não</SelectItem>
+                      <SelectItem value="N/A">N/A</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Trifásico */}
               <div className="space-y-2">
@@ -543,6 +618,71 @@ const EquipmentForm = () => {
                 </Select>
               </div>
             </div>
+
+            {/* Filtros Dinâmicos */}
+            {showFilterFields && (
+              <div className="space-y-4 pt-4 border-t">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-foreground">Filtros</h3>
+                  <Button type="button" variant="outline" size="sm" onClick={addFilter}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Filtro
+                  </Button>
+                </div>
+                {formData.filtros?.map((filtro, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end p-4 border rounded-lg">
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor={`modelo_filtro_${index}`}>Modelo de Filtro</Label>
+                      <Select
+                        value={filtro.modelo_filtro}
+                        onValueChange={(value) => handleFilterChange(index, "modelo_filtro", value)}
+                      >
+                        <SelectTrigger id={`modelo_filtro_${index}`} className="h-11 bg-background border-border">
+                          <SelectValue placeholder="Selecione o modelo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Filtro Manta">Filtro Manta</SelectItem>
+                          <SelectItem value="Filtro Cartonado">Filtro Cartonado</SelectItem>
+                          <SelectItem value="Filtro Absoluto">Filtro Absoluto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`tamanho_filtro_${index}`}>Tamanho do Filtro</Label>
+                      <Input
+                        id={`tamanho_filtro_${index}`}
+                        placeholder="Ex: 595x595x50"
+                        value={filtro.tamanho_filtro}
+                        onChange={(e) => handleFilterChange(index, "tamanho_filtro", e.target.value.toUpperCase())}
+                        style={{ textTransform: "uppercase" }}
+                        className="h-11 bg-background border-border"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`quantidade_filtro_${index}`}>Quantidade</Label>
+                      <Input
+                        id={`quantidade_filtro_${index}`}
+                        type="number"
+                        placeholder="Ex: 2"
+                        value={filtro.quantidade_filtro}
+                        onChange={(e) => handleFilterChange(index, "quantidade_filtro", e.target.value.toUpperCase())}
+                        style={{ textTransform: "uppercase" }}
+                        className="h-11 bg-background border-border"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFilter(index)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="flex gap-4 pt-4">
