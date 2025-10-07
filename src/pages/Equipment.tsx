@@ -130,69 +130,101 @@ const Equipment = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEquipments.map((equipment) => (
-              <Link to={`/equipamento/${equipment.id}`} key={equipment.id}>
-                <Card
-                  className="p-6 hover:shadow-lg transition-all duration-300 border-border bg-card h-full"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-md bg-primary/10">
-                        <Wind className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-foreground">{equipment.tag}</h3>
-                        <p className="text-sm text-muted-foreground">{equipment.modelo}</p>
+            {filteredEquipments.map((equipment) => {
+              const showBeltFields = equipment.modelo === "Fancoil" || equipment.modelo === "Exaustor" || equipment.modelo === "Ventilador";
+              const showHvacFields = equipment.modelo === "Hiwall" || equipment.modelo === "Cassete" || equipment.modelo === "Piso Teto";
+              const showFilterFields = equipment.modelo === "Fancoil" || equipment.modelo === "Ventilador";
+
+              return (
+                <Link to={`/equipamento/${equipment.id}`} key={equipment.id}>
+                  <Card
+                    className="p-6 hover:shadow-lg transition-all duration-300 border-border bg-card h-full"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-md bg-primary/10">
+                          <Wind className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg text-foreground">{equipment.tag}</h3>
+                          <p className="text-sm text-muted-foreground">{equipment.modelo}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    {equipment.localEvaporadora ? (
-                      <>
+                    <div className="space-y-2">
+                      {equipment.localEvaporadora ? (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Evaporadora:</span>
+                            <span className="font-medium text-foreground">{equipment.localEvaporadora}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Condensadora:</span>
+                            <span className="font-medium text-foreground">{equipment.localCondensadora}</span>
+                          </div>
+                        </>
+                      ) : (
                         <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Evaporadora:</span>
-                          <span className="font-medium text-foreground">{equipment.localEvaporadora}</span>
+                          <span className="text-muted-foreground">Local:</span>
+                          <span className="font-medium text-foreground">{equipment.local}</span>
                         </div>
+                      )}
+                      {showHvacFields && (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Capacidade:</span>
+                            <span className="font-medium text-foreground">{equipment.capacidade} BTU/h</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Fluido:</span>
+                            <span className="font-medium text-foreground">{equipment.fluido}</span>
+                          </div>
+                        </>
+                      )}
+                      {showBeltFields && (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Modelo da Correia:</span>
+                            <span className="font-medium text-foreground">{equipment.modelo_correia}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Qtd. Correias:</span>
+                            <span className="font-medium text-foreground">{equipment.quantidade_correias}</span>
+                          </div>
+                        </>
+                      )}
+                      {showFilterFields && equipment.filtros && equipment.filtros.length > 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Condensadora:</span>
-                          <span className="font-medium text-foreground">{equipment.localCondensadora}</span>
+                          <span className="text-muted-foreground">Filtro:</span>
+                          <span className="font-medium text-foreground">
+                            {equipment.filtros[0].modelo_filtro} ({equipment.filtros[0].tamanho_filtro})
+                            {equipment.filtros.length > 1 && ` (+${equipment.filtros.length - 1})`}
+                          </span>
                         </div>
-                      </>
-                    ) : (
+                      )}
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Local:</span>
-                        <span className="font-medium text-foreground">{equipment.local}</span>
+                        <span className="text-muted-foreground">Tensão:</span>
+                        <span className="font-medium text-foreground">{equipment.tensao}</span>
                       </div>
-                    )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Capacidade:</span>
-                      <span className="font-medium text-foreground">{equipment.capacidade} BTU/h</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Fluido:</span>
-                      <span className="font-medium text-foreground">{equipment.fluido}</span>
-                    </div>
-                                      <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">Tensão:</span>
-                                        <span className="font-medium text-foreground">{equipment.tensao}</span>
-                                      </div>                  </div>
 
-                  <div className="mt-4 pt-4 border-t border-border flex gap-2">
-                    {equipment.reversao === "Sim" && (
-                      <span className="px-2 py-1 text-xs rounded-full bg-accent/10 text-accent font-medium">
-                        Reversão
-                      </span>
-                    )}
-                    {equipment.trifasico === "Sim" && (
-                      <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary font-medium">
-                        Trifásico
-                      </span>
-                    )}
-                  </div>
-                </Card>
-              </Link>
-            ))}
+                    <div className="mt-4 pt-4 border-t border-border flex gap-2">
+                      {showHvacFields && equipment.reversao === "Sim" && (
+                        <span className="px-2 py-1 text-xs rounded-full bg-accent/10 text-accent font-medium">
+                          Reversão
+                        </span>
+                      )}
+                      {equipment.trifasico === "Sim" && (
+                        <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary font-medium">
+                          Trifásico
+                        </span>
+                      )}
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         )}
 

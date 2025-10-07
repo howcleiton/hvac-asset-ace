@@ -34,6 +34,10 @@ const EquipmentDetails = () => {
     );
   }
 
+  const showBeltFields = equipment.modelo === "Fancoil" || equipment.modelo === "Exaustor" || equipment.modelo === "Ventilador";
+  const showHvacFields = equipment.modelo === "Hiwall" || equipment.modelo === "Cassete" || equipment.modelo === "Piso Teto";
+  const showFilterFields = equipment.modelo === "Fancoil" || equipment.modelo === "Ventilador";
+
   const handleDelete = async () => {
     if (window.confirm("Tem certeza que deseja excluir este equipamento?")) {
       await deleteEquipment(equipment.id);
@@ -63,14 +67,30 @@ const EquipmentDetails = () => {
                 <span className="text-muted-foreground">Marca:</span>
                 <span className="font-medium text-foreground">{equipment.marca}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Fluido Refrigerante:</span>
-                <span className="font-medium text-foreground">{equipment.fluido}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Capacidade:</span>
-                <span className="font-medium text-foreground">{equipment.capacidade} BTU/h</span>
-              </div>
+              {showHvacFields && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Fluido Refrigerante:</span>
+                    <span className="font-medium text-foreground">{equipment.fluido}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Capacidade:</span>
+                    <span className="font-medium text-foreground">{equipment.capacidade} BTU/h</span>
+                  </div>
+                </>
+              )}
+              {showBeltFields && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Modelo da Correia:</span>
+                    <span className="font-medium text-foreground">{equipment.modelo_correia}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Quantidade de Correias:</span>
+                    <span className="font-medium text-foreground">{equipment.quantidade_correias}</span>
+                  </div>
+                </>
+              )}
               {equipment.localEvaporadora ? (
                 <>
                   <div className="flex justify-between text-sm">
@@ -91,17 +111,19 @@ const EquipmentDetails = () => {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Corrente:</span>
+                <span className="text-muted-foreground">Corrente Nominal (A):</span>
                 <span className="font-medium text-foreground">{equipment.corrente}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Tensão:</span>
+                <span className="text-muted-foreground">Tensão Nominal (V):</span>
                 <span className="font-medium text-foreground">{equipment.tensao}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Reversão:</span>
-                <span className="font-medium text-foreground">{equipment.reversao}</span>
-              </div>
+              {showHvacFields && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Reversão:</span>
+                  <span className="font-medium text-foreground">{equipment.reversao}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Trifásico:</span>
                 <span className="font-medium text-foreground">{equipment.trifasico}</span>
@@ -110,7 +132,34 @@ const EquipmentDetails = () => {
           </div>
         </Card>
 
+        {showFilterFields && equipment.filtros && equipment.filtros.length > 0 && (
+          <Card className="p-6 border-border bg-card mb-6">
+            <h3 className="text-lg font-medium text-foreground mb-4">Filtros</h3>
+            <div className="space-y-2">
+              {equipment.filtros.map((filtro, index) => (
+                <div key={index} className="grid grid-cols-3 gap-4 text-sm p-2 border-b">
+                  <div>
+                    <span className="text-muted-foreground">Modelo: </span>
+                    <span className="font-medium text-foreground">{filtro.modelo_filtro}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Tamanho: </span>
+                    <span className="font-medium text-foreground">{filtro.tamanho_filtro}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Quantidade: </span>
+                    <span className="font-medium text-foreground">{filtro.quantidade_filtro}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
         <div className="flex gap-4">
+          <Button onClick={() => navigate("/")} size="lg" variant="outline" className="flex-1 gap-2">
+            Voltar
+          </Button>
           <Button onClick={() => navigate(`/editar-equipamento/${equipment.id}`)} size="lg" className="flex-1 gap-2">
             <Pencil className="h-5 w-5" />
             Editar
